@@ -9,7 +9,7 @@ module.exports =  class ServerMusicQueue {
         return this.musicQueue.length
     }
 
-    get isEmpty(){
+    isEmpty(){
         return this.musicQueue.length == 0
     }
     

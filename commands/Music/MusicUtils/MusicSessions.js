@@ -14,9 +14,9 @@ module.exports = class MusicSessions {
         return this.musicSessions[guid] ? true : false
     }
 
-    async addSession({ guildID, channel }){
-        this.musicSessions[guildID] = new session({ guid: guildID, voiceChannel: channel})
-        let { success, type, message } = await this.musicSessions[guildID].connectToVoice()
+    addSession({ guildID, channel, callChannel }){
+        this.musicSessions[guildID] = new session({ guid: guildID, voiceChannel: channel, callChannel: callChannel })
+        let { success, type, message } = this.musicSessions[guildID].connectToVoice()
         if(!success) {
             if(type == 2){
                 this.removeSession(guildID)

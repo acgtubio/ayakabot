@@ -2,10 +2,11 @@ const MusicQueue = require('./MusicQueue.js')
 const { getVoiceConnection, createAudioPlayer, AudioPlayerStatus, VoiceConnectionStatus, entersState, joinVoiceChannel, createAudioResource, StreamType, NoSubscriberBehavior } = require('@discordjs/voice');
 
 module.exports = class Session{
-    constructor( { guid, voiceChannel } ) {
+    constructor( { guid, voiceChannel, callChannel } ) {
         this.session = {
             guildID: guid,
             channel: voiceChannel,
+            callChannel: callChannel,
             status: 'idle',
             queue: new MusicQueue(),
             conn: null,
@@ -13,7 +14,7 @@ module.exports = class Session{
         }
     }
 
-    async connectToVoice() {
+    connectToVoice() {
         // check if bot has already connected to a voice channel
         // attempt to connect if not connected.
         if(!this.session.conn) {
@@ -24,28 +25,11 @@ module.exports = class Session{
                 adapterCreator: this.session.channel.guild.voiceAdapterCreator
             })
 
-            // check if bot has permission to join a voice channel
-            let a = async () => {
-                try{
-                    await entersState(this.session.conn, VoiceConnectionStatus.Connecting, 1_000 )
-                    return {
-                        success: true,
-                        type: 0,
-                        message: 'Connecting.'
-                    }
-                }
-                catch(error){
-                    this.session.conn.destroy()
-                    this.session.conn = null
-                    return {
-                        success: false,
-                        type: 2,
-                        message: 'Insufficient permissions.'
-                    }
-                }
+            return {
+                success: true,
+                type: 0,
+                message: 'Connecting.'
             }
-            let b = await a()
-            return b
         }
         else{
             return {
@@ -58,5 +42,6 @@ module.exports = class Session{
 
     async queueMusic(song){
         await this.session.queue.queue(song)
+        return true
     }
 }

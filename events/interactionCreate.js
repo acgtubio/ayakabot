@@ -17,70 +17,52 @@ module.exports = {
             if (interaction.commandName == 'play'){
                 const channelID = interaction.member.voice.channel;
                 const gId = interaction.guildId;
-
                 if(!channelID) {
                     interaction.reply("You are not connected to a voice channel.");
-                    return 0;
+                    return;
                 }
-
-                // if(!serverQueue[gId]) {
-                //     serverQueue[gId] = {
-                //         queue: [],
-                //         status: 'idle',
-                //         player: null,
-                //         conn: null
-                //     }
-                // } 
-
-                if(!musicSessions.exists(gId)) {
-                    let { type, message } = await musicSessions.addSession( { guildID: gId, channel: channelID } )
-                    if (type == 2) {
-                        interaction.reply('I do not enough permissions to join the channel.')
-                    }
+                if(!channelID.joinable){
+                    interaction.reply("Not enough permissions to join the channel.")
+                    return
+                }
+                if(!musicSessions.exists(gId)){
+                    let { type, message } = musicSessions.addSession( { guildID: gId, channel: channelID, callChannel: interaction.channel } )
                 }
                 else if(musicSessions.musicSessions[gId].session.channel != channelID){
                     interaction.reply('Already in a voice channel.')
+                    return
                 }
-                
-                await musicSessions.musicSessions[gId].queueMusic(interaction.options.getString('song'))
+                else if(musicSessions.exists(gId) && !musicSessions.musicSessions[gId].session.conn){
+                    musicSessions.musicSessions[gId].connectToVoice()
+                }
+                // console.log(musicSessions.musicSessions)
+
+                var res = await musicSessions.musicSessions[gId].queueMusic(interaction.options.getString('song'))
                 // console.log(musicSessions.musicSessions[gId].session.queue)
                 // console.log(musicSessions.musicSessions[gId].session)
+                if (res && musicSessions.musicSessions[gId].session.status == 'playing'){
+                    return
+                }
+
                 await interaction.client.commands.get(interaction.commandName).execute(
                     musicSessions.musicSessions[gId].session, 
                     interaction
                 )
-
-                // if(!serverQueue[gId].conn || serverQueue[gId].conn.state.status == 'destroyed'){
-                //     serverQueue[gId].conn = joinVoiceChannel({
-                //         channelId: channelID.id,
-                //         guildId: gId,
-                //         selfDeaf: true,
-                //         adapterCreator: channelID.guild.voiceAdapterCreator
-                //     });        
-                // }
-
-                // if(serverQueue[gId].conn.state.status == 'playing' || serverQueue[gId].status == 'playing'){
-                //     return;
-                // }
-
-                // const command = interaction.client.commands.get(interaction.commandName);
-                // var keyword = interaction.options.getString('song');
-                
-                
-                // getUrl(interaction.options.getString('song')).then(async (url) => {
-                //     console.log(url)
-                //     url = "https://www.youtube.com/watch?v=" + url.split('"')[2];
-                //     serverQueue[gId].queue.push(url);
-                //     await command.execute(serverQueue, interaction);
-                // });
-                
-
-                // serverQueue[gId].conn.once(VoiceConnectionStatus.Disconnected, () => {
-                //     console.log('dc');
-                //     serverQueue[gId].conn.destroy();
-                //     serverQueue[gId].player.stop();
-                //     return;
-                // });
+            
+                musicSessions.musicSessions[gId].session.conn.once(VoiceConnectionStatus.Disconnected, () => {
+                    musicSessions.musicSessions[gId].session.player.removeAllListeners()
+                    musicSessions.musicSessions[gId].session.conn.removeAllListeners()
+                    musicSessions.musicSessions[gId].session.conn.destroy();
+                    musicSessions.musicSessions[gId].session.player.stop();
+                    musicSessions.musicSessions[gId].session.conn = null
+                    musicSessions.musicSessions[gId].session.player = null
+                    musicSessions.musicSessions[gId].session.status = 'idle'
+                    if (musicSessions.musicSessions[gId].session.queue.isEmpty()){
+                        musicSessions.removeSession(gId)
+                    }
+                    console.log(musicSessions.musicSessions)
+                    return;
+                });
                 
             }
             else {
