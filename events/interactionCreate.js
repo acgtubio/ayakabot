@@ -26,7 +26,11 @@ module.exports = {
                     return
                 }
                 if(!musicSessions.exists(gId)){
-                    let { type, message } = musicSessions.addSession( { guildID: gId, channel: channelID, callChannel: interaction.channel } )
+                    let { type, message } = musicSessions.addSession( { 
+                        guildID: gId, 
+                        channel: channelID, 
+                        callChannel: interaction.channel,
+                     } )
                 }
                 else if(musicSessions.musicSessions[gId].session.channel != channelID){
                     interaction.reply('Already in a voice channel.')
@@ -37,10 +41,11 @@ module.exports = {
                 }
                 // console.log(musicSessions.musicSessions)
 
-                var res = await musicSessions.musicSessions[gId].queueMusic(interaction.options.getString('song'))
+                var song = await musicSessions.musicSessions[gId].queueMusic(interaction.options.getString('song'), interaction.member.nickname)
                 // console.log(musicSessions.musicSessions[gId].session.queue)
-                // console.log(musicSessions.musicSessions[gId].session)
-                if (res && musicSessions.musicSessions[gId].session.status == 'playing'){
+                interaction.reply(`**${song.title}** is now queued.`)
+
+                if (musicSessions.musicSessions[gId].session.status == 'playing'){
                     return
                 }
 

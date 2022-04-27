@@ -40,8 +40,8 @@ module.exports = class Session{
         }
     }
 
-    async queueMusic(song){
-        await this.session.queue.queue(song)
-        return true
+    async queueMusic(song, nickname){
+        var song = await this.session.queue.queue(song, nickname)
+        return song
     }
 }

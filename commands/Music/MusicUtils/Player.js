@@ -15,7 +15,19 @@ module.exports = class Player{
             },
             author: {
                 name: "Now Playing"
-            }
+            },
+            fields: [
+                {
+                    name: "Channel",
+                    value: music.channel,
+                    inline: true
+                },
+                {
+                    name: 'Queued By',
+                    value: music.requestedBy,
+                    inline: true
+                }
+            ]
         }
         const resource = await Player.getResource(music.url)
         serverSession.status = 'playing'
